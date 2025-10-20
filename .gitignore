@@ -6,9 +6,6 @@ yarn-error.log*
 
 # Output files
 output/
-*.csv
-*.json
-*.txt
 
 # Uploaded files
 uploads/
