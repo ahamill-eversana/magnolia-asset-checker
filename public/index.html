@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnolia Asset Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .card-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .card-header h2 {
+            color: #495057;
+            font-size: 1.5rem;
+        }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ced4da;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e8ecff;
+            transform: scale(1.02);
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+            margin: 10px;
+        }
+        
+        .upload-button:hover {
+            background: #5a6fd8;
+        }
+        
+        .analyze-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: background 0.3s ease;
+        }
+        
+        .analyze-button:hover {
+            background: #218838;
+        }
+        
+        .analyze-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .file-info {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .file-info.show {
+            display: block;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-item {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .summary-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .summary-label {
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .tab {
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #6c757d;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .asset-list {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+        }
+        
+        .asset-item {
+            padding: 15px;
+            border-bottom: 1px solid #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .asset-item:last-child {
+            border-bottom: none;
+        }
+        
+        .asset-name {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .asset-uuid {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .asset-info {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .download-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .download-button {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s ease;
+        }
+        
+        .download-button:hover {
+            background: #138496;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .card-body {
+                padding: 20px;
+            }
+            
+            .summary {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Magnolia Asset Checker</h1>
+            <p>Analyze your Magnolia CMS exports to find unused assets</p>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>📁 Upload Files</h2>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="upload-area" id="assetUploadArea">
+                        <h3>DAM Asset Export (XML)</h3>
+                        <p>Drop your asset export XML file here or click to browse</p>
+                        <input type="file" id="assetFile" name="assetFile" accept=".xml" class="file-input" required>
+                        <button type="button" class="upload-button" onclick="document.getElementById('assetFile').click()">
+                            Choose Asset File
+                        </button>
+                        <div id="assetFileInfo" class="file-info"></div>
+                    </div>
+                    
+                    <div class="upload-area" id="pageUploadArea">
+                        <h3>Page Export (XML/YAML)</h3>
+                        <p>Drop your page export file here or click to browse</p>
+                        <input type="file" id="pageFile" name="pageFile" accept=".xml,.yaml,.yml" class="file-input" required>
+                        <button type="button" class="upload-button" onclick="document.getElementById('pageFile').click()">
+                            Choose Page File
+                        </button>
+                        <div id="pageFileInfo" class="file-info"></div>
+                    </div>
+                    
+                    <button type="submit" id="analyzeButton" class="analyze-button" disabled>
+                        🚀 Analyze Assets
+                    </button>
+                </form>
+                
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing your files... This may take a moment.</p>
+                </div>
+                
+                <div id="error" class="error"></div>
+            </div>
+        </div>
+        
+        <div id="results" class="card results">
+            <div class="card-header">
+                <h2>📊 Analysis Results</h2>
+            </div>
+            <div class="card-body">
+                <div id="summary" class="summary"></div>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('all')">All Assets</button>
+                    <button class="tab" onclick="showTab('unused')">Unused Assets</button>
+                    <button class="tab" onclick="showTab('referenced')">Referenced Assets</button>
+                </div>
+                
+                <div id="tab-all" class="tab-content active">
+                    <div id="allAssets" class="asset-list"></div>
+                </div>
+                
+                <div id="tab-unused" class="tab-content">
+                    <div id="unusedAssets" class="asset-list"></div>
+                </div>
+                
+                <div id="tab-referenced" class="tab-content">
+                    <div id="referencedAssets" class="asset-list"></div>
+                </div>
+                
+                <div class="download-buttons">
+                    <button class="download-button" onclick="downloadResults('all', 'json')">📥 Download All (JSON)</button>
+                    <button class="download-button" onclick="downloadResults('unused', 'json')">📥 Download Unused (JSON)</button>
+                    <button class="download-button" onclick="downloadResults('referenced', 'json')">📥 Download Referenced (JSON)</button>
+                    <button class="download-button" onclick="downloadResults('all', 'csv')">📄 Download All (CSV)</button>
+                    <button class="download-button" onclick="downloadResults('unused', 'csv')">📄 Download Unused (CSV)</button>
+                    <button class="download-button" onclick="downloadResults('referenced', 'csv')">📄 Download Referenced (CSV)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
