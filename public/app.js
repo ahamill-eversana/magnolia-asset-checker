@@ -229,6 +229,7 @@ function displayAssetList(containerId, assets) {
             <div>
                 <div class="asset-name">${escapeHtml(asset.fileName || asset.assetName || 'Unknown')}</div>
                 <div class="asset-uuid">${escapeHtml(asset.uuid || 'N/A')}</div>
+                <div class="asset-location">Location: ${escapeHtml(asset.location || 'root')}</div>
             </div>
             <div class="asset-info">
                 <div>Type: ${escapeHtml(asset.mimeType || 'Unknown')}</div>

@@ -67,9 +67,27 @@ class MagnoliaAssetExtractor {
     _extractAssetFromAssetNode(assetNode) {
         let uuid = null;
         let fileName = null;
+        let location = 'root';
         
         // Get the asset name from the node's sv:name attribute
         const assetName = assetNode.getAttribute('sv:name');
+        
+        // Get the complete folder path by traversing up the hierarchy
+        let folderPath = [];
+        let currentNode = assetNode.parentNode;
+        
+        while (currentNode && currentNode.tagName === 'sv:node') {
+            const nodeName = currentNode.getAttribute('sv:name');
+            if (nodeName) {
+                folderPath.unshift(nodeName);
+            }
+            currentNode = currentNode.parentNode;
+        }
+        
+        // Set the location as the path joined by '/'
+        if (folderPath.length > 0) {
+            location = folderPath.join('/');
+        }
         
         // Look through all child properties to find jcr:uuid and fileName
         const childElements = assetNode.childNodes;
@@ -104,7 +122,8 @@ class MagnoliaAssetExtractor {
         if (uuid) {
             return {
                 fileName: fileName || assetName,
-                uuid: uuid
+                uuid: uuid,
+                location: location
             };
         }
         
